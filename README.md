@@ -1,28 +1,34 @@
 # er-helper
 
-A CLI tool that connects to a MySQL database, inspects its schema, and generates a [Mermaid](https://mermaid.js.org/) ER diagram — then automatically copies it to your clipboard so you can paste it straight into [mermaid.live](https://mermaid.live/).
+A CLI tool that connects to a **MySQL** or **PostgreSQL** database, reflects its schema, and generates:
+
+- A [Mermaid](https://mermaid.js.org/) ER diagram — paste directly into [mermaid.live](https://mermaid.live/)
+- A SQL `CREATE TABLE` data schema
+
+Both outputs are automatically copied to your clipboard.
 
 ## Features
 
-- Reflects your full MySQL schema using SQLAlchemy (tables, columns, types, PKs, FKs)
-- Generates valid Mermaid `erDiagram` syntax
-- Auto-copies the output to your clipboard via `pyperclip`
+- Supports MySQL and PostgreSQL
+- Reflects full schema: tables, columns, types, PKs, FKs
+- Generates Mermaid `erDiagram` syntax
+- Generates SQL `CREATE TABLE` DDL schema
+- Auto-copies output to clipboard via `pyperclip`
 
 ## Requirements
 
 - Python >= 3.13
-- A running MySQL database
+- A running MySQL or PostgreSQL database
 
 ## Setup
 
 This project uses [uv](https://docs.astral.sh/uv/) for dependency management.
 
 ```bash
-# Install dependencies
 uv sync
 ```
 
-If you prefer pip:
+Or with pip:
 
 ```bash
 pip install -r requirements.txt
@@ -30,26 +36,48 @@ pip install -r requirements.txt
 
 ## Configuration
 
-Create a `.env` file in the project root:
+Create a `.env` file in the project root. The tool accepts both generic and MySQL-prefixed keys:
 
 ```env
+# Generic (works for both MySQL and PostgreSQL)
+DB_HOST=127.0.0.1
+DB_PORT=5432
+DB_USER=your_user
+DB_PASSWORD=your_password
+DB_NAME=your_database
+
+# Or MySQL-style keys (backwards compatible)
 MYSQL_HOST=127.0.0.1
 MYSQL_PORT=3306
-MYSQL_USER=your_user
-MYSQL_PASSWORD=your_password
+MYSQL_USER=root
+MYSQL_PASSWORD=password
 MYSQL_DB=your_database
 ```
 
 ## Usage
 
 ```bash
+# MySQL (default), generate both ER diagram + SQL schema
 uv run python generate_er.py
+
+# PostgreSQL
+uv run python generate_er.py --db postgres
+
+# Only ER diagram
+uv run python generate_er.py --output er
+
+# Only SQL schema
+uv run python generate_er.py --output schema
+
+# PostgreSQL, only ER diagram
+uv run python generate_er.py --db postgres --output er
 ```
 
-The diagram will be printed to the terminal and automatically copied to your clipboard. Just open [mermaid.live](https://mermaid.live/) and paste.
+Output is printed to the terminal and copied to your clipboard automatically.
 
 ## Example Output
 
+**ER Diagram:**
 ```
 erDiagram
     users {
@@ -63,6 +91,22 @@ erDiagram
         DECIMAL total
     }
     orders }o--|| users : "user_id references id"
+```
+
+**SQL Schema:**
+```sql
+CREATE TABLE users (
+    id INTEGER NOT NULL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL
+);
+
+CREATE TABLE orders (
+    id INTEGER NOT NULL PRIMARY KEY,
+    user_id INTEGER NOT NULL,
+    total DECIMAL(10, 2),
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);
 ```
 
 ## License
