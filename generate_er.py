@@ -76,11 +76,11 @@ class DBSchemaGenerator:
 
 def build_uri(db_type: str) -> str:
     """Constructs the SQLAlchemy URI based on the selected db type."""
-    host = os.getenv("DB_HOST") or os.getenv("MYSQL_HOST")
-    port = os.getenv("DB_PORT") or os.getenv("MYSQL_PORT")
-    user = os.getenv("DB_USER") or os.getenv("MYSQL_USER")
-    password = os.getenv("DB_PASSWORD") or os.getenv("MYSQL_PASSWORD")
-    db = os.getenv("DB_NAME") or os.getenv("MYSQL_DB")
+    host = os.getenv("DB_HOST")
+    port = os.getenv("DB_PORT")
+    user = os.getenv("DB_USER")
+    password = os.getenv("DB_PASSWORD")
+    db = os.getenv("DB_NAME")
 
     if not all([host, port, user, password, db]):
         raise ValueError("Missing database configuration in .env file.")

@@ -36,22 +36,14 @@ pip install -r requirements.txt
 
 ## Configuration
 
-Create a `.env` file in the project root. The tool accepts both generic and MySQL-prefixed keys:
+Create a `.env` file in the project root:
 
 ```env
-# Generic (works for both MySQL and PostgreSQL)
 DB_HOST=127.0.0.1
 DB_PORT=5432
 DB_USER=your_user
 DB_PASSWORD=your_password
 DB_NAME=your_database
-
-# Or MySQL-style keys (backwards compatible)
-MYSQL_HOST=127.0.0.1
-MYSQL_PORT=3306
-MYSQL_USER=root
-MYSQL_PASSWORD=password
-MYSQL_DB=your_database
 ```
 
 ## Usage
