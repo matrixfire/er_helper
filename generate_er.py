@@ -158,6 +158,16 @@ def main():
         if args.output in ("er", "both"):
             print("   Paste the ER diagram into: https://mermaid.live/")
 
+        # DB summary
+        tables = gen.metadata.tables
+        total_cols = sum(len(t.columns) for t in tables.values())
+        total_fks = sum(len(t.foreign_keys) for t in tables.values())
+        print(f"\n📊 Database Summary — {os.getenv('DB_NAME')}")
+        print(f"   Tables  : {len(tables)}")
+        print(f"   Columns : {total_cols}")
+        print(f"   FK refs : {total_fks}")
+        print(f"   Tables  : {', '.join(tables.keys())}")
+
     except Exception as e:
         print(f"An error occurred: {e}")
 
