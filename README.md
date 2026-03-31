@@ -39,6 +39,7 @@ pip install -r requirements.txt
 Create a `.env` file in the project root:
 
 ```env
+DB_TYPE=postgres
 DB_HOST=127.0.0.1
 DB_PORT=5432
 DB_USER=your_user
@@ -48,21 +49,17 @@ DB_NAME=your_database
 
 ## Usage
 
+Set `DB_TYPE` in your `.env` to `mysql` or `postgres`, then just run:
+
 ```bash
-# MySQL (default), generate both ER diagram + SQL schema
+# ER diagram only (default)
 uv run python generate_er.py
 
-# PostgreSQL
-uv run python generate_er.py --db postgres
-
-# Only ER diagram
-uv run python generate_er.py --output er
-
-# Only SQL schema
+# SQL schema only
 uv run python generate_er.py --output schema
 
-# PostgreSQL, only ER diagram
-uv run python generate_er.py --db postgres --output er
+# Both ER diagram and SQL schema
+uv run python generate_er.py --output both
 ```
 
 Output is printed to the terminal and copied to your clipboard automatically.

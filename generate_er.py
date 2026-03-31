@@ -19,6 +19,22 @@ class DBSchemaGenerator:
         if not self.metadata.tables:
             self.metadata.reflect(bind=self.engine)
 
+    # Mermaid reserved words that can't be used as column names — suffix with underscore
+    _MERMAID_RESERVED = {"order", "type", "class", "end", "start", "ref", "title", "direction"}
+
+    @staticmethod
+    def _sanitize_type(col_type: str) -> str:
+        """Strip length/collation info and remove chars invalid in Mermaid type names."""
+        base = col_type.split("(")[0]          # drop length/precision
+        base = base.split(" ")[0]              # drop collation suffix (e.g. TEXT COLLATE ...)
+        base = "".join(c if c.isalnum() or c == "_" else "_" for c in base)
+        return base or "UNKNOWN"
+
+    @staticmethod
+    def _sanitize_col_name(name: str) -> str:
+        """Replace chars invalid in Mermaid attribute names with underscores."""
+        return "".join(c if c.isalnum() or c == "_" else "_" for c in name)
+
     def generate_er_diagram(self) -> str:
         """Builds Mermaid erDiagram syntax from the reflected schema."""
         self._reflect()
@@ -28,9 +44,13 @@ class DBSchemaGenerator:
         for table_name, table in self.metadata.tables.items():
             lines.append(f"    {table_name} {{")
             for col in table.columns:
-                col_type = str(col.type).split("(")[0].replace(" ", "_")
+                col_type = self._sanitize_type(str(col.type))
                 marker = " PK" if col.primary_key else (" FK" if col.foreign_keys else "")
-                lines.append(f"        {col_type} {col.name}{marker}")
+                # rename reserved words by appending underscore
+                col_name = self._sanitize_col_name(col.name)
+                if col_name.lower() in self._MERMAID_RESERVED:
+                    col_name = col_name + "_"
+                lines.append(f"        {col_type} {col_name}{marker}")
             lines.append("    }")
 
         # Relationships
@@ -74,8 +94,9 @@ class DBSchemaGenerator:
         return "\n\n".join(statements)
 
 
-def build_uri(db_type: str) -> str:
-    """Constructs the SQLAlchemy URI based on the selected db type."""
+def build_uri() -> str:
+    """Constructs the SQLAlchemy URI from .env config."""
+    db_type = os.getenv("DB_TYPE", "mysql").lower()
     host = os.getenv("DB_HOST")
     port = os.getenv("DB_PORT")
     user = os.getenv("DB_USER")
@@ -96,24 +117,19 @@ def main():
         description="Generate Mermaid ER diagram and SQL schema from a database."
     )
     parser.add_argument(
-        "--db",
-        choices=["mysql", "postgres"],
-        default="mysql",
-        help="Database type to connect to (default: mysql)",
-    )
-    parser.add_argument(
         "--output",
         choices=["er", "schema", "both"],
-        default="both",
-        help="What to generate: er diagram, sql schema, or both (default: both)",
+        default="er",
+        help="What to generate: er diagram, sql schema, or both (default: er)",
     )
     args = parser.parse_args()
 
     load_dotenv()
 
     try:
-        db_uri = build_uri(args.db)
-        print(f"Connecting via {args.db.upper()}...")
+        db_uri = build_uri()
+        db_type = os.getenv("DB_TYPE", "mysql").upper()
+        print(f"Connecting via {db_type}...")
         gen = DBSchemaGenerator(db_uri)
 
         clipboard_parts = []
